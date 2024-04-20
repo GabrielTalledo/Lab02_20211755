@@ -14,22 +14,16 @@
             border: 1px solid white;
             float:left;
         }
-
         .verde {
             background-color: rgba(96,165,62,0.84)
         }
-
         .azul {
             background-color: rgba(131,217,255,0.78)
         }
-
         .rosa {
             background-color: #c067bb;
         }
-
     </style>
-
-
 </head>
 <body>
 
@@ -51,31 +45,14 @@
 
     <div>
 
-        <div class="row" style="height: 30px;">
-            <div class='box verde'><h6 style="color: darkblue; text-align: center"></h6></div>
-            <div class='box verde'><h6 style="color: darkblue; text-align: center"></h6></div>
-            <div class='box verde'><h6 style="color: darkblue; text-align: center">1</h6></div>
-            <div class='box verde'><h6 style="color: darkblue; text-align: center"></h6></div>
+        <div class="row" style="height: 30px;" th:each="i : ${#numbers.sequence(1, configuracion.getNumFilas())}">
+            <div style="display: inline-block;  height: 30px; width: 30px"  th:each="j : ${#numbers.sequence(1, configuracion.getNumColumnas())}">
+                <div class='box azul' th:if="${posicionesElegidas.isEmpty()}"><h6 style="color: darkblue; text-align: center"></h6></div>
+                <div class='box azul' th:each="posicionElegida: ${posicionesElegidas}" th:if="${!(i == posicionElegida.getFila() and j == posicionElegida.getColumna())}"><h6 style="color: darkblue; text-align: center"></h6></div>
+                <div class='box verde' th:each="posicionElegida: ${posicionesElegidas}" th:if="${i == posicionElegida.getFila() and j == posicionElegida.getColumna()}"><h6 style="color: darkblue; text-align: center"></h6></div>
+                <div class='box rosa' th:each="posicionElegida: ${posicionesElegidas}" th:if="${posicionElegida.ge}"><h6 style="color: darkblue; text-align: center"></h6></div>
+            </div>
         </div>
-        <div class="row" style="height: 30px;">
-            <div class='box verde'><h6 style="color: darkblue; text-align: center">2</h6></div>
-            <div class='box azul'><h6 style="color: darkblue; text-align: center"></h6></div>
-            <div class='box azul'><h6 style="color: darkblue; text-align: center"></h6></div>
-            <div class='box azul'><h6 style="color: darkblue; text-align: center"></h6></div>
-        </div>
-        <div class="row" style="height: 30px;">
-            <div class='box azul'><h6 style="color: darkblue; text-align: center"></h6></div>
-            <div class='box azul'><h6 style="color: darkblue; text-align: center"></h6></div>
-            <div class='box verde'><h6 style="color: darkblue; text-align: center"></h6></div>
-            <div class='box verde'><h6 style="color: darkblue; text-align: center"></h6></div>
-        </div>
-        <div class="row" style="height: 30px;">
-            <div class='box verde'><h6 style="color: darkblue; text-align: center"></h6></div>
-            <div class='box rosa'><h6 style="color: darkblue; text-align: center"></h6></div>
-            <div class='box verde'><h6 style="color: darkblue; text-align: center">1</h6></div>
-            <div class='box verde'><h6 style="color: darkblue; text-align: center"></h6></div>
-        </div>
-
 
     </div>
 
