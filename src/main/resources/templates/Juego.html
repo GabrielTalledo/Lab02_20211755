@@ -32,7 +32,7 @@
     <div class="mt-2" style="text-align: left;"><h2>Encuentre todo el cobre para ganar el juego</h2></div>
 
     <form method="post" th:action="@{/minar}">
-        <div class="mt-4 mb-3 row">
+        <div class="mt-4 mb-3 row" th:if="${winner == false and numIntentosDisponibles>0}">
             <p class="col-6">Coordenada a explotar de la mina:</p>
             <div class="col-2">
                 <input name="posicionExplosion" type="text" class="form-control">
@@ -43,18 +43,35 @@
         </div>
     </form>
 
-    <div>
-
+    <div class="mt-3">
         <div class="row" style="height: 30px;" th:each="i : ${#numbers.sequence(1, configuracion.getNumFilas())}">
             <div style="display: inline-block;  height: 30px; width: 30px"  th:each="j : ${#numbers.sequence(1, configuracion.getNumColumnas())}">
                 <div class='box azul' th:if="${posicionesElegidas.isEmpty()}"><h6 style="color: darkblue; text-align: center"></h6></div>
-                <div class='box azul' th:each="posicionElegida: ${posicionesElegidas}" th:if="${!(i == posicionElegida.getFila() and j == posicionElegida.getColumna())}"><h6 style="color: darkblue; text-align: center"></h6></div>
-                <div class='box verde' th:each="posicionElegida: ${posicionesElegidas}" th:if="${i == posicionElegida.getFila() and j == posicionElegida.getColumna()}"><h6 style="color: darkblue; text-align: center"></h6></div>
-                <div class='box rosa' th:each="posicionElegida: ${posicionesElegidas}" th:if="${posicionElegida.ge}"><h6 style="color: darkblue; text-align: center"></h6></div>
+                <div class='box azul' th:if="${posicionesElegidasStr.contains(i.toString()+' '+j.toString()) == false and posicionesElegidas.isEmpty() == false}"><h6 style="color: darkblue; text-align: center"></h6></div>
+                <div class='box verde' th:each="posicionElegida: ${posicionesElegidas}" th:if="${((i == posicionElegida.getFila()) and (j == posicionElegida.getColumna()) and (posicionElegida.isBomba() == false))}"><h6 style="color: darkblue; text-align: center" th:if="${posicionElegida.getNumBombasCerca() != 0}" th:text="${posicionElegida.getNumBombasCerca()}"></h6></div>
+                <div class='box rosa' th:each="posicionElegida: ${posicionesElegidas}" th:if="${((i == posicionElegida.getFila()) and (j == posicionElegida.getColumna()) and (posicionElegida.isBomba() == true))}"><h6 style="color: darkblue; text-align: center"></h6></div>
             </div>
         </div>
-
     </div>
+
+    <div class="mt-4" th:if="${posicionRepetida != null}">
+        <h6 th:text="'Posición (' + ${posicionRepetida} + ') ya descubierta. Por favor, introduzca una nueva posición.'"></h6>
+    </div>
+
+    <div class="mt-4" th:if="${configuracion.getNumIntentos()>numIntentosDisponibles and numIntentosDisponibles>0 and winner == false}">
+        <h6 th:text="'Encontró una bomba, le queda(n) ' + ${numIntentosDisponibles} + ' intento(s)!'"></h6>
+    </div>
+
+    <div class="mt-4" th:if="${numIntentosDisponibles<=0}">
+        <h6>Usted ha perdido el juego!</h6>
+        <a class="btn btn-danger mt-3" th:href="@{/buscaminas}">Reintentar</a>
+    </div>
+
+    <div class="mt-4" th:if="${winner}">
+        <h6 th:text="'Usted ha ganado el juego!'"></h6>
+        <a class="btn btn-success mt-3" th:href="@{/buscaminas}">Volver a jugar</a>
+    </div>
+
 
 </div>
 

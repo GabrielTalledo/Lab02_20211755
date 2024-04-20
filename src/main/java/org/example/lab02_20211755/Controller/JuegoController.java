@@ -19,15 +19,25 @@ import java.util.Objects;
 public class JuegoController {
 
     private Configuracion configuracion;
-    private List<Bomba> posicionesBombas = new ArrayList<>();
-    private List<Posicion> posicionesElegidas = new ArrayList<>();
-    private Integer numPosicionesSinBomba = 0;
+    private List<Bomba> posicionesBombas;
+    private List<Posicion> posicionesElegidas;
+    private List<String> posicionesElegidasStr;
+    private Integer numPosicionesSinBomba;
+    private Integer numIntentosDisponibles;
+    private boolean winner;
 
     @PostMapping(value={"/jugar"})
     public String guardarConfiguracion(Configuracion conf){
 
         //Almacenamiento de la configuración/estado del juego:
         this.configuracion = conf;
+
+        // Limpiado de variables:
+
+        posicionesBombas = new ArrayList<>();
+        posicionesElegidas = new ArrayList<>();
+        posicionesElegidasStr = new ArrayList<>();
+        winner = false;
 
         // Formato de la lista que contienen las posiciones de las bombas:
 
@@ -38,6 +48,10 @@ public class JuegoController {
         raw = raw.replace(","," ");
         List<String> posBombasStrList = List.of(raw.split("-"));
 
+        if(conf.getNumBombas() != posBombasStrList.size()){
+            return "redirect:/buscaminas";
+        }
+
         for(String posicion: posBombasStrList){
             Bomba bomba = new Bomba();
             bomba.setFila(Integer.parseInt(posicion.split(" ")[0]));
@@ -47,6 +61,7 @@ public class JuegoController {
 
         // Se asigna el número de las posiciones a abrir para ganar:
         numPosicionesSinBomba = conf.getNumFilas()*conf.getNumColumnas()-conf.getNumBombas();
+        numIntentosDisponibles = conf.getNumIntentos();
 
         return "redirect:/jugar";
     }
@@ -57,28 +72,52 @@ public class JuegoController {
         model.addAttribute("configuracion",configuracion);
         model.addAttribute("posicionesBombas",posicionesBombas);
         model.addAttribute("posicionesElegidas",posicionesElegidas);
+        model.addAttribute("posicionesElegidasStr",posicionesElegidasStr);
         model.addAttribute("numPosicionesSinBomba",numPosicionesSinBomba);
+        model.addAttribute("numIntentosDisponibles",numIntentosDisponibles);
+        model.addAttribute("winner",winner);
 
         return "Juego";
     }
 
     @PostMapping(value={"/minar"})
-    public String guardarMina(@RequestParam("posicionExplosion") String posicionExplosion){
+    public String guardarMina(@RequestParam("posicionExplosion") String posicionExplosion, Model model){
 
-        // Guardado de la posición
+        // Redireccionamiento por si se ganó o perdió:
+        if(configuracion.getNumIntentos()<0){
+            return "redirect:/buscaminas";
+        }
+
+        // Comprobación de posiciones repetidas:
+
+        if(posicionesElegidasStr.contains(posicionExplosion)) {
+            model.addAttribute("configuracion",configuracion);
+            model.addAttribute("posicionesBombas",posicionesBombas);
+            model.addAttribute("posicionesElegidas",posicionesElegidas);
+            model.addAttribute("posicionesElegidasStr",posicionesElegidasStr);
+            model.addAttribute("numPosicionesSinBomba",numPosicionesSinBomba);
+            model.addAttribute("numIntentosDisponibles",numIntentosDisponibles);
+            model.addAttribute("winner",winner);
+            model.addAttribute("posicionRepetida",posicionExplosion);
+            return "Juego";
+        }
+
+        // Guardado de la posición:
+        posicionesElegidasStr.add(posicionExplosion);
         Posicion posicion = new Posicion();
         posicion.setFila(Integer.parseInt(posicionExplosion.split(" ")[0]));
         posicion.setColumna(Integer.parseInt(posicionExplosion.split(" ")[1]));
 
+
         Integer numBombasCerca = 0;
 
-        // Determinación de si es una bomba y bombas cercanas
+        // Determinación de si es una bomba y bombas cercanas:
         for(Bomba bomba: posicionesBombas){
 
             // (x,y)
             if(Objects.equals(posicion.getFila(), bomba.getFila()) && Objects.equals(posicion.getColumna(), bomba.getColumna())){
                 posicion.setBomba(true);
-                configuracion.setNumIntentos(configuracion.getNumIntentos()-1);
+                numIntentosDisponibles = numIntentosDisponibles - 1;
             }
             // (x-1,y)
             if(Objects.equals(posicion.getFila()-1, bomba.getFila()) && Objects.equals(posicion.getColumna(), bomba.getColumna())){
@@ -109,7 +148,22 @@ public class JuegoController {
                 numBombasCerca = numBombasCerca + 1;
             }
 
-            posicionesElegidas.add(posicion);
+        }
+
+        // Guardado:
+        posicion.setNumBombasCerca(numBombasCerca);
+        posicionesElegidas.add(posicion);
+
+        // Comprobación de si se ganó la partida:
+        Integer aux = 0;
+        for(Posicion pos: posicionesElegidas){
+            if(!pos.isBomba()){
+                aux = aux + 1;
+            }
+        }
+
+        if(aux.equals(numPosicionesSinBomba)){
+            winner = true;
         }
 
         return "redirect:/jugar";
